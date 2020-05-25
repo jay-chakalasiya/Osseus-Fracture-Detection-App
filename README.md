@@ -1,6 +1,6 @@
-# ossuesms12
+# osseusfracturedetection
 
-A new Flutter application.
+Osseus App for MS-3.
 
 ## Getting Started
 

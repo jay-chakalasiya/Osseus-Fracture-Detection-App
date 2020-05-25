@@ -1,5 +1,13 @@
-/*
 import 'package:flutter/material.dart';
+//import 'package:flutter_sound/flutter_sound_player.dart';
+//import 'package:flutter_sound/flutter_sound_recorder.dart';
+import 'package:vibration/vibration.dart';
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(MyApp());
@@ -11,18 +19,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.amber,
-
+        primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: Scaffold(
-        backgroundColor: Colors.amber[100],
-        appBar: AppBar(
-          title: Text('Osseus'),
-          backgroundColor: Colors.amber,
-        ),
-        body:,
-      ),
+      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
@@ -30,186 +30,184 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
   final String title;
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _vib = 0;
+  String _vibText = 'Start Vibration';
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+
+  int _recorder = 0;
+  String _recText = 'Start Recording';
+  FlutterSoundRecorder _flutterRecord = new FlutterSoundRecorder();
+  FlutterSoundPlayer _flutterPlayer = new FlutterSoundPlayer();
+  Permission _permission = Permission.microphone;
+  String _recorderTxt = "Getting Save Location";
+
+  int _vibRec = 0;
+  String _vibRecText = 'Start Processing';
+
+
+
+
+  void _vibrate() {
+    if (_vib == 0) {
+      Vibration.vibrate(duration: 60 * 1000, amplitude: 255);
+      setState(() {
+        _vib = 1;
+        _vibText = 'Stop Vibration';
+      });
+    } else {
+      Vibration.cancel();
+      setState(() {
+        _vib = 0;
+        _vibText = 'Start Vibration';
+      });
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
+  Future<void> startRecorder() async{
+    Directory appDocDirectory = await getExternalStorageDirectory();
+    if (await Permission.microphone.request().isGranted){
+      print(appDocDirectory.path);
+      setState(() {
+        _recorderTxt = appDocDirectory.path;
+        _recText = appDocDirectory.path;
+      });
+      await _flutterRecord.openAudioSession(
+        category: SessionCategory.record,
+      );
+      await _flutterRecord.startRecorder(
+          codec: Codec.aacADTS,
+          toFile: appDocDirectory.path + "/test3.mp3",
+          sampleRate: 16000
+      );
+      print(_flutterRecord.recorderState);
+    }
+    else { Permission.microphone.request(); }
   }
-}*/
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; 
-import 'dart:io'; 
-//import 'package:vibration/vibration.dart';
+  void stopRecorder() async {
+    print("HI");
+    //await _flutterRecord.stopRecorder();
+    print(_flutterRecord.recorderState);
+    await _flutterRecord.closeAudioSession();
+    print(_flutterRecord.recorderState);
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Vibrate Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.amber,
-      ),
-      home: VibrateHomepage(),
-    );
   }
-}
 
-class VibrateHomepage extends StatefulWidget {
-  VibrateHomepage({Key key}) : super(key: key);
+  void _record() {
+    if (_recorder == 0) {
+      startRecorder();
 
-  @override
-  _VibrateHomepageState createState() => _VibrateHomepageState();
-}
+      setState(() {
+        _recorder = 1;
+        _recText = 'Stop Recording';
+      });
+    } else {
+      stopRecorder();
+      setState(() {
+        _recorder = 0;
+        _recText = 'Start Recording';
+      });
+    }
+  }
 
-class _VibrateHomepageState extends State<VibrateHomepage> {
-  var vib=0;
-  _PatternVibrate() {
-    while (vib<1000) {
-      HapticFeedback.lightImpact();
-      vib+=1;
+  void _startVibrationAndRecording(){
+    if (_vibRec==0){
+      startRecorder();
+      Vibration.vibrate(duration: 60 * 1000, amplitude: 255);
+      setState(() {
+        _vibRec = 1;
+        _vibRecText = 'Stop Processing';
+      });
+    }
+    else{
+      stopRecorder();
+      Vibration.cancel();
+      setState(() {
+        _vibRec = 0;
+        _vibRecText = 'Start Processing';
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Osseus'),),
-      backgroundColor: Colors.amber[0],
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
       body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            /*Center(
+              child: Text(
+                'Current State of Vibration:',
+              ),
+            ),
+            Center(
+              child: Text(
+                '$_vib',
+                style: Theme.of(context).textTheme.headline4,
+              ),
+            ),
 
-        child: Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.center,
+             */
+            Container(
+              margin: EdgeInsets.all(20),
+              child: FlatButton(
+                padding: EdgeInsets.all(20),
+                color: Colors.blue,
+                child: Text(
+                  '$_vibText',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onPressed: _vibrate,
+              ),
+            ),
+            /*Center(
+              child: Text(
+                'Current State of Recording:',
+              ),
+            ),
+            Center(
+              child: Text(
+                '$_recorder',
+                style: Theme.of(context).textTheme.headline4,
+              ),
+            ),
 
-            children: <Widget>[
-              Expanded(
-
-                child: FlatButton(
-                  child: Text('Vibrate'),
-                  padding: EdgeInsets.all(10),
-
-                  onPressed: () {
-                    HapticFeedback.vibrate();
-                  },
-                  color: Colors.amber[200],
+             */
+            Container(
+              margin: EdgeInsets.all(20),
+              child: FlatButton(
+                padding: EdgeInsets.all(20),
+                color: Colors.blue,
+                child: Text(
+                  '$_recText',
+                  style: TextStyle(color: Colors.white),
                 ),
+                onPressed: _record,
               ),
-              Container(
-                height: 5,
-              ),
-              Expanded(
-                child: FlatButton(
-
-                  child: Text('lightImpact'),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                  },
-                  color: Colors.amber[300],
+            ),
+            Container(
+              margin: EdgeInsets.all(20),
+              child: FlatButton(
+                padding: EdgeInsets.all(20),
+                color: Colors.blue,
+                child: Text(
+                  '$_vibRecText',
+                  style: TextStyle(color: Colors.white),
                 ),
+                onPressed: _startVibrationAndRecording,
               ),
-              Container(
-                height: 5,
-              ),
-              Expanded(
-                child: FlatButton(
-                  child: Text('mediumImpact'),
-                  onPressed: () {
-                    HapticFeedback.mediumImpact();
-                  },
-                  color: Colors.amber[400],
-                ),
-              ),
-              Container(
-                height: 5,
-              ),
-              Expanded(
-                child: FlatButton(
-                  child: Text('heavyImpact'),
-                  onPressed: () {
-                    HapticFeedback.heavyImpact();
-                  },
-                  color: Colors.amber[500],
-                ),
-              ),
-              Container(
-                height: 5,
-              ),
-              Expanded(
-                child: FlatButton(
-                  child: Text('Long-time'),
-                  onPressed: () {
-                    _PatternVibrate();
-                  },
-                  color: Colors.amber[600],
-                ),
-              )
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
