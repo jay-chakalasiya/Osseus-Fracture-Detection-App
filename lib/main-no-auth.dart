@@ -23,11 +23,11 @@ void main() async {
     name: 'test',
     options: FirebaseOptions(
       googleAppID: (Platform.isIOS || Platform.isMacOS)
-          ? '1:159623150305:ios:4a213ef3dbd8997b'
-          : '1:375346618752:android:daeefd75063cef6697a165',
+          ? '* Add iOS app ID *'
+          : '* Add Android app ID *',
       gcmSenderID: '159623150305',
-      apiKey: 'AIzaSyCHy-OFcz_Lvfe30vhqHVLiNKZK007PGZI',
-      projectID: 'osseus-fracture-detection',
+      apiKey: '* Add API Key Here *',
+      projectID: '* Add Project ID Here *',
     ),
   );
   final FirebaseStorage storage = FirebaseStorage(
@@ -83,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _uploadMeta() async {
     final File file =
-        await File('${appDocDirectory.path}/foo$_fileId.txt').create();
+    await File('${appDocDirectory.path}/foo$_fileId.txt').create();
     String _annotation='Fractured';
     if (_character==SingingCharacter.Fractured_Bone){
       String _annotation = 'Fractured';
@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
     dateTimeString = new DateTime.now().toIso8601String()+' : '+_annotation;
     await file.writeAsString(dateTimeString);
     final StorageReference ref =
-        widget.storage.ref().child('text').child('foo$_fileId.txt');
+    widget.storage.ref().child('text').child('foo$_fileId.txt');
     final StorageUploadTask uploadTask = ref.putFile(
       file,
       StorageMetadata(
@@ -111,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _uploadAudio() async {
     final File file = File('${appDocDirectory.path}/audio$_fileId.wav');
     final StorageReference ref =
-        widget.storage.ref().child('audio-test').child('audio$_fileId.wav');
+    widget.storage.ref().child('audio-test').child('audio$_fileId.wav');
     final StorageUploadTask uploadTask = ref.putFile(
       file,
       StorageMetadata(
