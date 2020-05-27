@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "375346618752",
+    "firebase_url": "https://osseus-fracture-detection.firebaseio.com",
+    "project_id": "osseus-fracture-detection",
+    "storage_bucket": "osseus-fracture-detection.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375346618752:android:daeefd75063cef6697a165",
+        "android_client_info": {
+          "package_name": "com.example.osseusfracturedetection"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "375346618752-9mvmepdtcm4tul8g0h85p82jsulc2pfm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHy-OFcz_Lvfe30vhqHVLiNKZK007PGZI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "375346618752-9mvmepdtcm4tul8g0h85p82jsulc2pfm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

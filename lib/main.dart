@@ -8,12 +8,37 @@ import 'package:flutter/widgets.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
-  runApp(MyApp());
+
+
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final FirebaseApp app = await FirebaseApp.configure(
+    name: 'test',
+    options: FirebaseOptions(
+      googleAppID: (Platform.isIOS || Platform.isMacOS)
+          ? '1:159623150305:ios:4a213ef3dbd8997b'
+          : '1:375346618752:android:daeefd75063cef6697a165',
+      gcmSenderID: '159623150305',
+      apiKey: 'AIzaSyCHy-OFcz_Lvfe30vhqHVLiNKZK007PGZI',
+      projectID: 'osseus-fracture-detection',
+    ),
+  );
+  final FirebaseStorage storage = FirebaseStorage(
+      app: app, storageBucket: 'gs://osseus-fracture-detection.appspot.com');
+  runApp(MyApp(storage: storage));
 }
 
 class MyApp extends StatelessWidget {
+  MyApp({this.storage});
+  final FirebaseStorage storage;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -22,19 +47,22 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.amber,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Flutter Demo Home Page', storage: storage),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({this.storage, Key key, this.title}) : super(key: key);
+  final FirebaseStorage storage;
   final String title;
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  //final String fileName = 'hello.txt';
+  //final StorageReference storageRef =  FirebaseStorage.instance.ref().child(fileName);
   int _vib = 0;
   String _vibText = 'Start Vibration';
 
@@ -49,6 +77,45 @@ class _MyHomePageState extends State<MyHomePage> {
   int _vibRec = 0;
   String _vibRecText = 'Start Processing';
 
+  String _fileId;
+  Directory appDocDirectory;
+  var dateTimeString;
+
+
+  Future<void> _uploadFile() async {
+    final File file = await File('${appDocDirectory.path}/foo$_fileId.txt').create();
+    dateTimeString = new DateTime.now().toIso8601String();
+    await file.writeAsString(dateTimeString);
+    final StorageReference ref = widget.storage.ref().child('text').child('foo$_fileId.txt');
+    final StorageUploadTask uploadTask = ref.putFile(
+      file,
+      StorageMetadata(
+        contentLanguage: 'en',
+        customMetadata: <String, String>{'activity': 'test'},
+      ),
+    );
+
+    //setState(() {
+     // _tasks.add(uploadTask);
+    //});
+  }
+
+  Future<void> _uploadFile2() async {
+
+    final File file = File('${appDocDirectory.path}/audio$_fileId.wav');
+    final StorageReference ref = widget.storage.ref().child('audio-test').child('audio$_fileId.wav');
+    final StorageUploadTask uploadTask = ref.putFile(
+      file,
+      StorageMetadata(
+        contentLanguage: 'en',
+        customMetadata: <String, String>{'activity': 'test'},
+      ),
+    );
+
+    //setState(() {
+    // _tasks.add(uploadTask);
+    //});
+  }
 
 
 
@@ -69,7 +136,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> startRecorder() async{
-    Directory appDocDirectory = await getExternalStorageDirectory();
+    _fileId = Uuid().v1();
+    appDocDirectory = await getExternalStorageDirectory();
     if (await Permission.microphone.request().isGranted){
       print(appDocDirectory.path);
       setState(() {
@@ -81,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
       await _flutterRecord.startRecorder(
           codec: Codec.aacADTS,
-          toFile: appDocDirectory.path + "/test3.mp3",
+          toFile: appDocDirectory.path + "/audio$_fileId.wav",
           sampleRate: 16000
       );
       print(_flutterRecord.recorderState);
@@ -126,6 +194,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     else{
       stopRecorder();
+      _uploadFile2();
+      _uploadFile();
       Vibration.cancel();
       setState(() {
         _vibRec = 0;
@@ -213,3 +283,5 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+
+
