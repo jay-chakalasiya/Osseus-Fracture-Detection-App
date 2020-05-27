@@ -78,23 +78,30 @@ class _MyHomePageState extends State<MyHomePage> {
   String _fileId;
   Directory appDocDirectory;
   var dateTimeString;
+  int _class=1;
+  String _classDir;
+  String _cloudMetaDir = 'meta';
+  String _cloudAudioDir = 'data';
 
   SingingCharacter _character = SingingCharacter.Fractured_Bone;
 
   Future<void> _uploadMeta() async {
     final File file =
     await File('${appDocDirectory.path}/foo$_fileId.txt').create();
-    String _annotation='Fractured';
-    if (_character==SingingCharacter.Fractured_Bone){
-      String _annotation = 'Fractured';
+
+    if (_class==1){
+      _classDir='Fractured';
     }
     else{
-      String _annotation = 'Healthy';
+      _classDir='Healthy';
     }
-    dateTimeString = new DateTime.now().toIso8601String()+' : '+_annotation;
+
+
+
+    dateTimeString = new DateTime.now().toIso8601String();
     await file.writeAsString(dateTimeString);
     final StorageReference ref =
-    widget.storage.ref().child('text').child('foo$_fileId.txt');
+    widget.storage.ref().child(_cloudMetaDir).child(_classDir).child('foo$_fileId.txt');
     final StorageUploadTask uploadTask = ref.putFile(
       file,
       StorageMetadata(
@@ -109,9 +116,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _uploadAudio() async {
+    if (_class==1){
+      _classDir='Fractured';
+    }
+    else{
+      _classDir='Healthy';
+    }
     final File file = File('${appDocDirectory.path}/audio$_fileId.wav');
     final StorageReference ref =
-    widget.storage.ref().child('audio-test').child('audio$_fileId.wav');
+    widget.storage.ref().child(_cloudAudioDir).child(_classDir).child('audio$_fileId.wav');
     final StorageUploadTask uploadTask = ref.putFile(
       file,
       StorageMetadata(
@@ -252,6 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (SingingCharacter value) {
                   setState(() {
                     _character = value;
+                    _class=0;
                   });
                 },
               ),
@@ -264,6 +278,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (SingingCharacter value) {
                   setState(() {
                     _character = value;
+                    _class=0;
                   });
                 },
               ),
