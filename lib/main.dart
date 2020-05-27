@@ -23,15 +23,15 @@ void main() async{
     name: 'test',
     options: FirebaseOptions(
       googleAppID: (Platform.isIOS || Platform.isMacOS)
-          ? '1:159623150305:ios:4a213ef3dbd8997b'
-          : '1:375346618752:android:daeefd75063cef6697a165',
+          ? '* IOS *'
+          : '* Android *',
       gcmSenderID: '159623150305',
-      apiKey: 'AIzaSyCHy-OFcz_Lvfe30vhqHVLiNKZK007PGZI',
-      projectID: 'osseus-fracture-detection',
+      apiKey: 'Here it will go',
+      projectID: '* Project ID*',
     ),
   );
   final FirebaseStorage storage = FirebaseStorage(
-      app: app, storageBucket: 'gs://osseus-fracture-detection.appspot.com');
+      app: app, storageBucket: '* STorage Bucket Address');
   runApp(MyApp(storage: storage));
 }
 
