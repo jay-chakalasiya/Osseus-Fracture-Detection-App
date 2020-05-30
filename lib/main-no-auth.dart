@@ -24,8 +24,8 @@ void main() async {
     name: 'test',
     options: FirebaseOptions(
       googleAppID: (Platform.isIOS || Platform.isMacOS)
-          ? 'Ios ID here'
-          : 'Android ID here',
+          ? 'iOS'
+          : 'Android',
       gcmSenderID: '159623150305',
       apiKey: '',
       projectID: 'osseus-fracture-detection',
@@ -53,6 +53,117 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: MyHomePage(title: 'Osseus', storage: storage),
+    );
+  }
+}
+
+class TutorialPage extends StatefulWidget {
+  @override
+  _TutorialPageState createState() => _TutorialPageState();
+}
+
+class _TutorialPageState extends State<TutorialPage>{
+
+  var images = ['images/tutorial_3.gif','images/tutorial_3.gif','images/tutorial_3.gif','images/tutorial_3.gif'];
+  int _currentIndex=0;
+  String _currentText='Next';
+  bool _relyVisibility=false;
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Tutorial'),
+      ),
+
+
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+
+            Image.asset(
+              images[_currentIndex],
+              //height: MediaQuery.of(context).size.height * 0.45,
+            ),
+            Container(
+              margin: EdgeInsets.all(15),
+              child: Text('Step : ${_currentIndex+1}/${images.length}'),
+            ),
+
+            Container(
+              width: 200,
+              //margin: EdgeInsets.all(20),
+              child: RaisedButton(
+                padding: EdgeInsets.all(20),
+                color: Colors.amber,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(100)),
+                child: Center(
+                  child: Text(
+                    _currentText,
+                    style: TextStyle(color: Colors.black),
+                  ),
+                ),
+                onPressed: (){
+                  if (_currentIndex<images.length-2){
+                    setState(() {
+                      _currentIndex+=1;
+                    });
+                  }
+                  else if (_currentIndex==images.length-2){
+                    setState(() {
+                      _currentText = 'Go Back To Home Screen';
+                      _currentIndex+=1;
+                      _relyVisibility=true;
+                    });
+                  }
+                  else{
+                    setState(() {
+                      _currentText = 'Next';
+                      _currentIndex=0;
+                      _relyVisibility=false;
+                    });
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ),
+            Container(
+              height: 20,
+            ),
+            Visibility(
+              visible: _relyVisibility,
+              child: Container(
+                width: 200,
+                //margin: EdgeInsets.all(20),
+                child: RaisedButton(
+                  padding: EdgeInsets.all(20),
+                  color: Colors.amber,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100)),
+                  child: Center(
+                    child: Icon(Icons.replay),
+                  ),
+                  onPressed: (){
+                    setState(() {
+                      _currentText = 'Next';
+                      _currentIndex=0;
+                      _relyVisibility=false;
+                    });
+                  },
+                ),
+              ),
+            ),
+
+
+
+          ],
+        ),
+      ),
     );
   }
 }
@@ -264,13 +375,17 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      //floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
-      /*floatingActionButton: new FloatingActionButton.extended(
-        onPressed: null,
-        label: Text('How To Use'),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      floatingActionButton: new FloatingActionButton.extended(
+        onPressed: (){
+          Navigator.push(context, new MaterialPageRoute(builder: (context) => new TutorialPage()));
+        },
+        label: Text('How To Make Cup'),
         icon: Icon(Icons.help),
         backgroundColor: Colors.amber[200],
-      ),*/
+      ),
+
+
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -281,35 +396,6 @@ class _MyHomePageState extends State<MyHomePage> {
               'images/tutorial_3.gif',
               height: MediaQuery.of(context).size.height * 0.45,
             ),
-
-
-            /*Container(
-              margin: EdgeInsets.all(20),
-              child: FlatButton(
-                padding: EdgeInsets.all(20),
-                color: Colors.blue,
-                child: Text(
-                  '$_vibText',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onPressed: _vibrate,
-              ),
-            ),
-
-            Container(
-              margin: EdgeInsets.all(20),
-              child: FlatButton(
-                padding: EdgeInsets.all(20),
-                color: Colors.blue,
-                child: Text(
-                  '$_recText',
-                  style: TextStyle(color: Colors.white),
-                ),
-                onPressed: _record,
-              ),
-            ),
-
-             */
             Container(
               margin: EdgeInsets.all(20),
               child: Text(
