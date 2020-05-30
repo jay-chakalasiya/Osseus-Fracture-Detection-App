@@ -13,6 +13,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 
 enum SingingCharacter { Fractured_Bone, Healthy_Bone }
 
@@ -23,11 +24,11 @@ void main() async {
     name: 'test',
     options: FirebaseOptions(
       googleAppID: (Platform.isIOS || Platform.isMacOS)
-          ? '* Add iOS app ID *'
-          : '* Add Android app ID *',
+          ? 'Ios ID here'
+          : 'Android ID here',
       gcmSenderID: '159623150305',
-      apiKey: '* Add API Key Here *',
-      projectID: '* Add Project ID Here *',
+      apiKey: '',
+      projectID: 'osseus-fracture-detection',
     ),
   );
   final FirebaseStorage storage = FirebaseStorage(
@@ -41,13 +42,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Osseus Fracture Detection',
       theme: ThemeData(
         primarySwatch: Colors.amber,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page', storage: storage),
+      home: MyHomePage(title: 'Osseus', storage: storage),
     );
   }
 }
@@ -78,30 +83,37 @@ class _MyHomePageState extends State<MyHomePage> {
   String _fileId;
   Directory appDocDirectory;
   var dateTimeString;
-  int _class=1;
+  int _class = 1;
   String _classDir;
   String _cloudMetaDir = 'meta';
   String _cloudAudioDir = 'data';
 
   SingingCharacter _character = SingingCharacter.Fractured_Bone;
 
+  String _portalAddress = 'https://osseusserver2.azurewebsites.net/checksignalstrength?path=data%2F';
+  String _request = '';
+  String _feedback='';
+
+  //double width = MediaQuery.of(context).size.width;
+  //double yourWidth = width * 0.65;
+
   Future<void> _uploadMeta() async {
     final File file =
     await File('${appDocDirectory.path}/foo$_fileId.txt').create();
 
-    if (_class==1){
-      _classDir='Fractured';
+    if (_class == 1) {
+      _classDir = 'Fractured';
+    } else {
+      _classDir = 'Healthy';
     }
-    else{
-      _classDir='Healthy';
-    }
-
-
 
     dateTimeString = new DateTime.now().toIso8601String();
     await file.writeAsString(dateTimeString);
-    final StorageReference ref =
-    widget.storage.ref().child(_cloudMetaDir).child(_classDir).child('foo$_fileId.txt');
+    final StorageReference ref = widget.storage
+        .ref()
+        .child(_cloudMetaDir)
+        .child(_classDir)
+        .child('foo$_fileId.txt');
     final StorageUploadTask uploadTask = ref.putFile(
       file,
       StorageMetadata(
@@ -116,15 +128,21 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _uploadAudio() async {
-    if (_class==1){
-      _classDir='Fractured';
+    if (_class == 1) {
+      _classDir = 'Fractured';
+    } else {
+      _classDir = 'Healthy';
     }
-    else{
-      _classDir='Healthy';
-    }
+    _request = '$_portalAddress$_classDir%2Faudio$_fileId.wav';
+    print(_request);
+    //String _requestEnc = Uri.encodeFull(_request);
+
     final File file = File('${appDocDirectory.path}/audio$_fileId.wav');
-    final StorageReference ref =
-    widget.storage.ref().child(_cloudAudioDir).child(_classDir).child('audio$_fileId.wav');
+    final StorageReference ref = widget.storage
+        .ref()
+        .child(_cloudAudioDir)
+        .child(_classDir)
+        .child('audio$_fileId.wav');
     final StorageUploadTask uploadTask = ref.putFile(
       file,
       StorageMetadata(
@@ -132,6 +150,22 @@ class _MyHomePageState extends State<MyHomePage> {
         customMetadata: <String, String>{'activity': 'test'},
       ),
     );
+    await new Future.delayed(const Duration(seconds : 2));
+    final _response = await http.get(_request);
+    print(_response);
+    print(_response.statusCode);
+    if (_response.statusCode == 200){
+      setState(() {
+        _feedback = _response.body;
+      });
+      print(_response.body);
+    }
+    else{
+      setState(() {
+        _feedback = 'can\'t reach the server';
+      });
+      print('Server Error');
+    }
 
     //setState(() {
     // _tasks.add(uploadTask);
@@ -163,7 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
         category: SessionCategory.record,
       );
       await _flutterRecord.startRecorder(
-          codec: Codec.aacADTS,
+          codec: Codec.pcm16WAV, //aacADTS,
           toFile: appDocDirectory.path + "/audio$_fileId.wav",
           sampleRate: 16000);
       //print(_flutterRecord.recorderState);
@@ -178,7 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
     await _flutterRecord.closeAudioSession();
     // print(_flutterRecord.recorderState);
     setState(() {
-      _saveLocation = 'file saved at ${appDocDirectory.path}/audio$_fileId.wav';
+      _saveLocation = 'Experiment is Saved';// at ${appDocDirectory.path}/audio$_fileId.wav';
     });
   }
 
@@ -187,14 +221,17 @@ class _MyHomePageState extends State<MyHomePage> {
       startRecorder();
 
       setState(() {
+
         _recorder = 1;
         _recText = 'Stop Recording';
+
       });
     } else {
       stopRecorder();
       setState(() {
         _recorder = 0;
         _recText = 'Start Recording';
+
       });
     }
   }
@@ -206,6 +243,8 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         _vibRec = 1;
         _vibRecText = 'Stop';
+        _feedback = '';
+        _saveLocation='';
       });
     } else {
       stopRecorder();
@@ -225,11 +264,25 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
+      //floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      /*floatingActionButton: new FloatingActionButton.extended(
+        onPressed: null,
+        label: Text('How To Use'),
+        icon: Icon(Icons.help),
+        backgroundColor: Colors.amber[200],
+      ),*/
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
+            Image.asset(
+              'images/tutorial_3.gif',
+              height: MediaQuery.of(context).size.height * 0.45,
+            ),
+
+
             /*Container(
               margin: EdgeInsets.all(20),
               child: FlatButton(
@@ -257,6 +310,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
 
              */
+            Container(
+              margin: EdgeInsets.all(20),
+              child: Text(
+                '$_feedback',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
             ListTile(
               title: const Text('Fractured Bone'),
               leading: Radio(
@@ -265,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (SingingCharacter value) {
                   setState(() {
                     _character = value;
-                    _class=0;
+                    _class = 0;
                   });
                 },
               ),
@@ -278,13 +338,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 onChanged: (SingingCharacter value) {
                   setState(() {
                     _character = value;
-                    _class=0;
+                    _class = 0;
                   });
                 },
               ),
             ),
             Container(
-              height: 30,
+              height: 20,
             ),
             Container(
               width: 200,
