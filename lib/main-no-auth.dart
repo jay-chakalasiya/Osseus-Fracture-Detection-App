@@ -24,8 +24,8 @@ void main() async {
     name: 'test',
     options: FirebaseOptions(
       googleAppID: (Platform.isIOS || Platform.isMacOS)
-          ? 'iOS'
-          : 'Android',
+          ? ''
+          : '',
       gcmSenderID: '159623150305',
       apiKey: '',
       projectID: 'osseus-fracture-detection',
@@ -64,11 +64,12 @@ class TutorialPage extends StatefulWidget {
 
 class _TutorialPageState extends State<TutorialPage>{
 
-  var images = ['images/tutorial_3.gif','images/tutorial_3.gif','images/tutorial_3.gif','images/tutorial_3.gif'];
+
+  var images = ['images/one.gif', 'images/two.gif','images/three.gif','images/tutorial_3.gif'];
+
   int _currentIndex=0;
   String _currentText='Next';
   bool _relyVisibility=false;
-
 
   @override
   Widget build(BuildContext context) {
@@ -85,10 +86,14 @@ class _TutorialPageState extends State<TutorialPage>{
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
 
-            Image.asset(
+            /*Image.asset(
               images[_currentIndex],
               //height: MediaQuery.of(context).size.height * 0.45,
             ),
+
+             */
+            //_img,
+            Image.asset(images[_currentIndex]),
             Container(
               margin: EdgeInsets.all(15),
               child: Text('Step : ${_currentIndex+1}/${images.length}'),
@@ -138,7 +143,7 @@ class _TutorialPageState extends State<TutorialPage>{
             Visibility(
               visible: _relyVisibility,
               child: Container(
-                width: 200,
+                width: 65,
                 //margin: EdgeInsets.all(20),
                 child: RaisedButton(
                   padding: EdgeInsets.all(20),
