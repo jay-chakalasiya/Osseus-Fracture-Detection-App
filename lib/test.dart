@@ -17,9 +17,9 @@ void main() async {
     options: FirebaseOptions(
       googleAppID: (Platform.isIOS || Platform.isMacOS)
           ? '1:159623150305:ios:4a213ef3dbd8997b'
-          : '1:375346618752:android:daeefd75063cef6697a165',
+          : '',
       gcmSenderID: '159623150305',
-      apiKey: 'AIzaSyCHy-OFcz_Lvfe30vhqHVLiNKZK007PGZI',
+      apiKey: '',
       projectID: 'osseus-fracture-detection',
     ),
   );
