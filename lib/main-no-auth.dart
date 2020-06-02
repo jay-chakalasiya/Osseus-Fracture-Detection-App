@@ -24,8 +24,8 @@ void main() async {
     name: 'test',
     options: FirebaseOptions(
       googleAppID: (Platform.isIOS || Platform.isMacOS)
-          ? ''
-          : '',
+          ? 'ios'
+          : 'android',
       gcmSenderID: '159623150305',
       apiKey: '',
       projectID: 'osseus-fracture-detection',
@@ -65,7 +65,16 @@ class TutorialPage extends StatefulWidget {
 class _TutorialPageState extends State<TutorialPage>{
 
 
-  var images = ['images/one.gif', 'images/two.gif','images/three.gif','images/tutorial_3.gif'];
+  var images = ['images/1_NeededMaterials.gif', 'images/2_RemoveLid.gif','images/3_FlipCup.gif','images/4_cuthole.gif'
+    , 'images/5_LocateMicrophone.gif', 'images/6_InsertMic.gif', 'images/7_TapeHole.gif', 'images/8_Complete.gif'];
+  var subs = ['You will need: 1) Clean and Dry Paper Cup  2) Smart Phone  3) Headphones with Mic  4) Scissors  5) Tape',
+    'Remove lid (if there is one).',
+    'Flip the cup over.',
+    'Cut a small slit in the top of the cup.',
+    'Locate the microphone on your headphones. Some headphones may have the microphone on the cord or other unexpected locations.',
+    'Insert microphone of headphones into the slit you just made in the cup.',
+    'Use tape to seal any gap through cup or if it is necessary to secure the microphone.',
+    'Congradulations! Your fracture dectecter is now ready for use.'];
 
   int _currentIndex=0;
   String _currentText='Next';
@@ -95,15 +104,24 @@ class _TutorialPageState extends State<TutorialPage>{
             //_img,
             Image.asset(images[_currentIndex]),
             Container(
-              margin: EdgeInsets.all(15),
+              height: 5,
+            ),
+            Container(
+              margin: EdgeInsets.all(5),
               child: Text('Step : ${_currentIndex+1}/${images.length}'),
+            ),
+
+            Container(
+              height: 50,
+              margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
+              child: Text(subs[_currentIndex]),
             ),
 
             Container(
               width: 200,
               //margin: EdgeInsets.all(20),
               child: RaisedButton(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(15),
                 color: Colors.amber,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(100)),
@@ -207,8 +225,12 @@ class _MyHomePageState extends State<MyHomePage> {
   SingingCharacter _character = SingingCharacter.Fractured_Bone;
 
   String _portalAddress = 'https://osseusserver2.azurewebsites.net/checksignalstrength?path=data%2F';
+  String _preditionAddress = 'https://osseusserver2.azurewebsites.net/processclip?path=data%2F';
   String _request = '';
+  String _predictionRequest='';
   String _feedback='';
+  String _prediction = '';
+
 
   //double width = MediaQuery.of(context).size.width;
   //double yourWidth = width * 0.65;
@@ -250,7 +272,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _classDir = 'Healthy';
     }
     _request = '$_portalAddress$_classDir%2Faudio$_fileId.wav';
+    _predictionRequest = '$_preditionAddress$_classDir%2Faudio$_fileId.wav';
     print(_request);
+    print(_predictionRequest);
     //String _requestEnc = Uri.encodeFull(_request);
 
     final File file = File('${appDocDirectory.path}/audio$_fileId.wav');
@@ -259,20 +283,24 @@ class _MyHomePageState extends State<MyHomePage> {
         .child(_cloudAudioDir)
         .child(_classDir)
         .child('audio$_fileId.wav');
-    final StorageUploadTask uploadTask = ref.putFile(
-      file,
-      StorageMetadata(
-        contentLanguage: 'en',
-        customMetadata: <String, String>{'activity': 'test'},
-      ),
-    );
-    await new Future.delayed(const Duration(seconds : 2));
+    final StorageUploadTask uploadTask = ref.putFile(file);
+
+    StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
+
+    //await new Future.delayed(const Duration(seconds : 2));
     final _response = await http.get(_request);
-    print(_response);
-    print(_response.statusCode);
+    final _predictionResponse = await http.get(_predictionRequest);
+    print(_predictionResponse.statusCode);
+    print(_predictionResponse.body);
     if (_response.statusCode == 200){
       setState(() {
-        _feedback = _response.body;
+        if (_response.body=='Please make sure your cup makes a good seal and the phone is touching bone'){
+          _feedback = _response.body;
+        }
+        else{
+          _feedback = _predictionResponse.body;
+        }
+
       });
       print(_response.body);
     }
@@ -398,19 +426,24 @@ class _MyHomePageState extends State<MyHomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Image.asset(
-              'images/tutorial_3.gif',
-              height: MediaQuery.of(context).size.height * 0.45,
+              'images/tutorial.gif',
+              width: MediaQuery.of(context).size.width,
+              //height: MediaQuery.of(context).size.height * 0.45,
             ),
             Container(
-              margin: EdgeInsets.all(20),
+              height: 32,
+              margin: EdgeInsets.fromLTRB(20, 10, 20, 10),
               child: Text(
                 '$_feedback',
                 style: TextStyle(color: Colors.red),
               ),
             ),
             ListTile(
+              contentPadding: EdgeInsets.fromLTRB(20, 0, 20, 0),
               title: const Text('Fractured Bone'),
+              dense:true,
               leading: Radio(
+
                 value: SingingCharacter.Fractured_Bone,
                 groupValue: _character,
                 onChanged: (SingingCharacter value) {
@@ -422,7 +455,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             ListTile(
+              contentPadding: EdgeInsets.fromLTRB(20, 0, 20, 0),
               title: const Text('Healthy Bone'),
+              dense:true,
               leading: Radio(
                 value: SingingCharacter.Healthy_Bone,
                 groupValue: _character,
@@ -435,13 +470,13 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             Container(
-              height: 20,
+              height: 10,
             ),
             Container(
               width: 200,
               //margin: EdgeInsets.all(20),
               child: RaisedButton(
-                padding: EdgeInsets.all(20),
+                padding: EdgeInsets.all(15),
                 color: Colors.amber,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(100)),
