@@ -67,6 +67,8 @@ flutter:
     - images/one.gif
     - images/two.gif
     - images/three.gif
+    - images/tutorial.gif
+    - images/1_NeededMaterials.gif
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
